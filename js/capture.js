@@ -6,7 +6,7 @@ var showTileFill = true;
 var tileFillLuminance = false; // Else hue
 
 // Disks
-var showDiskBorder = false;
+var showDiskBorder = true;
 var showDiskFill = false;
 var showDiskCenter = false;
 
