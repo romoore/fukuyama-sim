@@ -81,7 +81,9 @@ function Transmitter(x, y){
 	}
 
 	Transmitter.all.push(this);
-	this.color = "hsla("+(Math.random()*30+Transmitter.all.indexOf(this)/10)*300+",100%,60%,.2)";
+	var h = Math.random()*30 + (Transmitter.all.indexOf(this)/10)*300;
+	this.color = "hsl("+h+",100%,60%)";
+	this.colorA = "hsla("+h+",100%,60%,.2)";
 }
 
 Transmitter.all = [];
@@ -204,12 +206,12 @@ CapDisk.prototype = {
 			ctx.closePath();
 			// Border
 			if(showDiskBorder){
-				ctx.strokeStyle = "#fff";
+				ctx.strokeStyle = this.t1.color;
 				ctx.stroke();
 			}
 			// Fill
 			if(showDiskFill){
-				ctx.fillStyle = this.t1.color;
+				ctx.fillStyle = this.t1.colorA;
 //				ctx.fillStyle = "rgba(0,255,0,.04)";
 				ctx.fill();
 			}
