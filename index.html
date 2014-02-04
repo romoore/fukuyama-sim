@@ -1,42 +1,79 @@
-<!doctype html>
-<html>
+<!DOCTYPE html>
+<html lang="en">
 	<head>
 		<meta charset="utf-8">
+		<link type="text/css" rel="stylesheet" href="css/bootstrap.css">
+		<link type="text/css" rel="stylesheet" href="css/jquery-ui.css">
 		<link type="text/css" rel="stylesheet" href="css/custom.css">
 		<title>Capture-It</title>
 	</head>
 	<body>
-		<canvas id="canvas" width="720" height="480"></canvas>
-		<form role="form">
-			<div class="form-group">
-				<input type="checkbox" id="showTileBordersCheck" >Show Tile Borders</input>
+		<div class="container">
+			<div class="row">
+				<div class="col-md-12">
+				<h1 style="border-bottom: 1px solid black;">Fukuyama Simulation</h1>
+					<canvas id="canvas" width="720" height="480"></canvas>
+				</div>
+			</div><!-- row -->
+			<div class="row">
+				<div class="col-md-6">
+					<h3>Tiles</h3>
+					<div class="form-group">
+						<label><input type="checkbox" id="showTileFill" checked></input>Show Tiles</label>
+						<label><input type="checkbox" id="showTileBordersCheck" ></input>Show Tile Borders</label>
+						<label><input type="checkbox" id="tileFillLuminance"></input>Use Luminance for Tiles</label>
+					</div>
+					<div class="form-group">
+						<label for="numRows">No. Rows: <input id="numRows" class="light-spinner" value="5"></input></label>
+						<label for="numCols">No. Cols: <input id="numCols" class="light-spinner" value="5"></label>
+					</div>
+				</div>
+				<div class="col-md-6">
+					<h3>Disks</h3>
+					<div class="form-group">
+						<label><input type="checkbox" id="showDiskBorder"></input>Show Disk Borders</label>
+						<label><input type="checkbox" id="showDiskFill"></input>Fill Disks</label>
+						<label><input type="checkbox" id="showDiskCenter"></input>Show Disk Centers</label>
+					</div>
+				</div>
+			</div><!-- row -->
+			<div class="row">
+				<div class="col-md-6">
+					<h3>Transmitters</h3>
+					<div class="form-group">
+						<label for="txCount">Transmitters</label>
+						<input id="txCount" class="light-spinner" value="5">
+					</div>
+					<div class="form-group">
+						<label><input type="checkbox" id="showTransmitters" checked></input>Show Transmitters</label>
+						<label><input type="checkbox" id="showWinnerLines"></input>Show Winner Line</label>
+						<label><input type="checkbox" id="showLoserLines"></input>Show Loser Lines</label>
+					</div>
+				</div>
+				<div class="col-md-6">
+					<h3>Performance</h3>
+					<!-- <div class="form-group">
+						<label for="fps">FPS</label>
+						<input id="fps" class="light-spinner" value="10" >
+					</div>-->
+					<div class="form-group">
+						<label for="transparencySlide" id="transSlideLabel">Transparency: 100%</label>
+						<div id="transparencySlide" style="width: 240px;"></div>
+					</div>
+					<div class="form-group">
+						<label for="resolutionSlide" id="resSlideLabel">Resolution:
+							100%&times;100%</label>
+						<div id="resolutionSlide" style="width: 240px;"></div>
+					</div>
+				</div>
+			<div id="scripts">
+				<script src="js/jquery.js"></script>
+				<script src="js/jquery-ui.js"></script>
+				<script src="js/rAF.js"></script>
+				<script src="js/verge.js"></script>
+				<!--		<script src="js/particles.js"></script> -->
+				<script src="js/capture.js"></script>
 			</div>
-			<div class="form-group">
-				<input type="checkbox" id="showTileFill" checked>Show Tiles</input>
-			</div>
-			<div class="form-group">
-				<input type="checkbox" id="tileFillLuminance">Use Luminance for Tiles</input>
-			</div>
-			<div class="form-group">
-				<input type="checkbox" id="showDiskBorder">Show Disk Borders</input>
-			</div>
-			<div class="form-group">
-				<input type="checkbox" id="showDiskFill">Fill Disks</input>
-			</div>
-			<div class="form-group">
-				<input type="checkbox" id="showDiskCenter">Show Disk Centers</input>
-			</div>
-			<div class="form-group">
-				<label for="fps">FPS</label>
-				<input id="fps" class="light-spinner" value="10" >
-			</div>
-		</form>
-		<div id="scripts">
-			<script src="js/jquery.js"></script>
-			<script src="js/jquery-ui.js"></script>
-			<script src="js/rAF.js"></script>
-			<!--		<script src="js/particles.js"></script> -->
-			<script src="js/capture.js"></script>
-		</div>
+		</div><!-- container -->
 	</body>
 </html>

@@ -1,4 +1,4 @@
-// Flags
+jQuery.extend(verge);
 
 // Rendering tiles
 var showTileBorder = false;
@@ -12,6 +12,15 @@ var showDiskCenter = false;
 
 // Transmitters
 var showTransmitter = true;
+var showWinnerLines = false;
+var showLoserLines = false;
+
+var clearAlpha = 1.0;
+
+// Canvas resolutions WxH
+var resolutions = [{w:"100%",h:"100%"},{w:540,h:360},{w:720,h:480},{w:1080,h:720},{w:1440,h:960},{w:1920,h:1080}];
+var isMaxCanvas = true;
+
 
 
 // Tile represents a possible location for a receiver
@@ -38,7 +47,7 @@ Tile.prototype = {
 			}
 			if(showTileBorder){
 				ctx.strokeStyle = "#fff";
-				ctx.strokeWidth = 1;
+				ctx.lineWidth = 1;
 				ctx.strokeRect(0,0,this.w,this.h);
 			}
 		ctx.restore();
@@ -56,19 +65,42 @@ function Transmitter(x, y){
 	this.x = x;
 	this.y = y;
 	this.r = 4;
-	this.vx = Math.random()*.1;
-	this.vy = Math.random()*.1;
+	this.vx = Math.random()*.05;
+	this.vy = Math.random()*.05;
+	this.diskLosers = [];
+	this.diskWinners = [];
 
 	var i = Transmitter.all.length;
 	while(i--){
-		new CapDisk(this,Transmitter.all[i]);
-		new CapDisk(Transmitter.all[i],this);
+		var c = new CapDisk(this,Transmitter.all[i]);
+		this.diskWinners.push(c);
+		c.t2.diskLosers.push(c);
+		c = new CapDisk(Transmitter.all[i],this);
+		this.diskLosers.push(c);
+		c.t1.diskWinners.push(c);
 	}
 
 	Transmitter.all.push(this);
+	this.color = "hsla("+(Math.random()*30+Transmitter.all.indexOf(this)/10)*300+",100%,60%,.2)";
 }
 
 Transmitter.all = [];
+
+function winLoseLine(tx,line){
+	ctx.save();
+		ctx.beginPath();
+		ctx.moveTo(0,0);
+		ctx.lineTo(line.x-tx.x,line.y-tx.y);
+		ctx.closePath();
+		ctx.strokeStyle = "#000";
+		ctx.lineWidth = 2;
+		ctx.stroke();
+		ctx.strokeStyle = "#55f";
+		ctx.lineWidth = 1;
+		ctx.stroke();
+	ctx.restore();
+
+}
 
 Transmitter.prototype = {
 	update: function(dt) {
@@ -94,18 +126,51 @@ Transmitter.prototype = {
 	},
 
 	draw: function(ctx){
-		if(showTransmitter){
+		if(showTransmitter || showLoserLines || showWinnerLines ){
 			ctx.save();
 				ctx.translate(this.x,this.y);
-				ctx.fillStyle = "#abc";
-				ctx.beginPath();
-					ctx.arc(0,0,this.r,0,Math.PI*2,true);
-				ctx.closePath();
-				ctx.fill();
-				ctx.strokeStyle = "#000";
-				ctx.stroke();
+				if(showTransmitter){
+					ctx.fillStyle = "#abc";
+					ctx.beginPath();
+						ctx.arc(0,0,this.r,0,Math.PI*2,true);
+					ctx.closePath();
+					ctx.fill();
+					ctx.strokeStyle = "#000";
+					ctx.stroke();
+				}
+				
+				if(showLoserLines){
+					var i = this.diskLosers.length;
+					while(i--){
+						winLoseLine(this,this.diskLosers[i]);
+					}
+				}
+				if(showWinnerLines){
+					var i = this.diskWinners.length;
+					while(i--){
+						winLoseLine(this,this.diskWinners[i]);
+					}
+				}
+
 			ctx.restore();
 		}
+	},
+	remove: function(){
+		var i = this.diskLosers.length;
+		while(i--){
+			var d = this.diskLosers[i];
+			d.t1.diskWinners.splice(d.t1.diskWinners.indexOf(d),1);
+			CapDisk.all_disks.splice(CapDisk.all_disks.indexOf(d),1);
+		}
+		this.diskLosers.length = 0;
+		i = this.diskWinners.length;
+		while(i--){
+			var d = this.diskWinners[i];
+			d.t2.diskLosers.splice(d.t2.diskLosers.indexOf(d),1);
+			CapDisk.all_disks.splice(CapDisk.all_disks.indexOf(d),1);
+		}
+		this.diskWinners.length = 0;
+		Transmitter.all.splice(Transmitter.all.indexOf(this),1);
 	}
 };
 
@@ -144,7 +209,8 @@ CapDisk.prototype = {
 			}
 			// Fill
 			if(showDiskFill){
-				ctx.fillStyle = "rgba(0,255,0,.04)";
+				ctx.fillStyle = this.t1.color;
+//				ctx.fillStyle = "rgba(0,255,0,.04)";
 				ctx.fill();
 			}
 			// Center
@@ -155,7 +221,7 @@ CapDisk.prototype = {
 				ctx.fillStyle = "#44f";
 				ctx.fill();
 				ctx.strokeStyle = "#fff";
-				ctx.strokeWidth = 1;
+				ctx.lineWidth = 1;
 				ctx.stroke();
 			}
 		ctx.restore();
@@ -172,13 +238,11 @@ CapDisk.prototype = {
 
 
 var canvas = document.getElementById("canvas");
-//canvas.width =  window.innerWidth - 30;
-//canvas.height = window.innerHeight - 30;
 var ctx = canvas.getContext("2d");
 
 
-var numRows = 40;
-var numCols = 40;
+var numRows = 5;
+var numCols = 5;
 
 var fps = 10;
 var msToDraw = 1000/fps;
@@ -189,23 +253,35 @@ var tileHeight = (canvas.height / numRows)|0;
 
 var hex = ['a','b','c','d','e','f'];
 
-for(var x = 0; x < numCols; ++x){
-	for (var y = 0; y < numRows; ++y){
-		new Tile(x*tileWidth,y*tileHeight,tileWidth,tileHeight,0,"#fff");
+function genTiles(){
+	tileWidth = (canvas.width / numCols)|0;
+	tileHeight = (canvas.height / numRows)|0;
+	for(var x = 0; x < numCols; ++x){
+		for (var y = 0; y < numRows; ++y){
+			new Tile(x*tileWidth,y*tileHeight,tileWidth,tileHeight,0,"#fff");
+		}
 	}
 }
 var cH = canvas.height;
 var cW = canvas.width;
 
 var resize = function(){
-//	canvas.height = window.innerHeight - 30;
-//	canvas.width = window.innerWidth - 30;
-	if(canvas.height > 960)canvas.height = 960;
-	if(canvas.width > 960) canvas.width = 960;
+	console.log("resizing");
+	if(isMaxCanvas){
+		autoCanvasSize();
+	}	
+	if((tileWidth != (canvas.width/numCols)|0) || (tileHeight != (canvas.height/numRows)|0)){
+		Tile.all.length = 0;
+		genTiles();
+	}
 	tileWidth = canvas.width / numCols;
 	tileHeight = canvas.height / numRows;
 
 	var i = Tile.all.length;
+	if(i == 0){
+		genTiles();
+		i = Tile.all.length;
+	}
 	while(i--){
 		var tile = Tile.all[i]
 		tile.w = tileWidth;
@@ -214,17 +290,15 @@ var resize = function(){
 
 	i = Transmitter.all.length;
 	while(i--){
-		Transmitter.all[i].x += (canvas.width - cW)/2;
-		Transmitter.all[i].y += (canvas.height - cH)/2;
+		Transmitter.all[i].x *= (canvas.width/cW);//+= (canvas.width - cW)/2;
+		Transmitter.all[i].y *= (canvas.height/cH);//+= (canvas.height - cH)/2;
 	}
 
 
 	cH = canvas.height;
 	cW = canvas.width;
 };
-
-
-window.onresize = resize;
+$(window).resize(resize);
 resize();
 
 var lastDraw = 0;
@@ -236,17 +310,14 @@ for(var i = 0; i < numTransmitters; ++i){
 	new Transmitter(canvas.width*Math.random(),canvas.height*Math.random());
 }
 
-
-var draw = function(time){
-	var start = Date.now();
-	fpsDiv.innerHTML = fps+" FPS";
-
-	var dT = time - lastDraw;
-	lastDraw = time;
-
+function animate(dT){
 	// Clear canvas
 	ctx.save();
-		ctx.fillStyle = "rgba(0, 0, 0, 1)";
+	if(clearAlpha < 1.0){
+		ctx.fillStyle = "rgba(0, 0, 0,"+clearAlpha+")";
+	}else {
+		ctx.fillStyle = "#000";
+	}
 		ctx.fillRect(0,0,canvas.width,canvas.height);
 	ctx.restore();
 
@@ -255,6 +326,10 @@ var draw = function(time){
 	// Draw tiles
 	//Tile.draw_all(ctx);
 	var i = Tile.all.length;
+	if(i == 0){
+		genTiles();
+		i = Tile.all.length;
+	}
 	while(i--){
 		Tile.all[i].draw(ctx);
 	}
@@ -263,24 +338,23 @@ var draw = function(time){
 		Transmitter.all[i].draw(ctx);
 	}
 
-	i = CapDisk.all_disks.length;
-	while(i--){
-		CapDisk.all_disks[i].draw(ctx);
+	if(showDiskBorder || showDiskFill || showDiskCenter ){
+		i = CapDisk.all_disks.length;
+		while(i--){
+			CapDisk.all_disks[i].draw(ctx);
+		}
 	}
 
 
+}
 
-	var delay = msToDraw - (Date.now()-start);
-//	console.log(delay+"/"+dT+'/'+time);	
-	if(delay > 0) {
-
-		setTimeout(function() {
-			requestAnimationFrame(draw);
-		},delay);
-	}else {
-		requestAnimationFrame(draw);
-	}
-
+var draw = function(time){
+	//setTimeout(function(){
+		window.requestAnimationFrame(draw);
+		var dT = time - lastDraw;
+		lastDraw = time;
+		animate(dT);
+	//	},1000/fps);
 }
 
 function LineSegment(x1,y1,x2,y2){
@@ -366,40 +440,42 @@ function intersect(c,r){
 }
 
 var updateSim = function(dT){
-	var i = Transmitter.all.length;
-	while(i--){
-		Transmitter.all[i].update(dT);
-	}
-	i = CapDisk.all_disks.length;
-	while(i--){
-		CapDisk.all_disks[i].update(dT);
-	}
-
-	// Update tiles
-	i = Tile.all.length;
-	while(i--){
-		var tile = Tile.all[i];
-		tile.score = 0;
-		var j = CapDisk.all_disks.length;
-		while(j--){
-			var disk = CapDisk.all_disks[j];
-			if(intersect(disk,tile)) {
-				tile.score++;
-			}
+	var i;
+		i = Transmitter.all.length;
+		while(i--){
+			Transmitter.all[i].update(dT);
 		}
+	if(showTileFill || showDiskBorder || showDiskFill || showDiskCenter || showWinnerLines || showLoserLines){
+		i = CapDisk.all_disks.length;
+		while(i--){
+			CapDisk.all_disks[i].update(dT);
+		}
+	}
+	if(showTileFill){
+		// Update tiles
+		i = Tile.all.length;
+		if(i == 0){
+			genTiles();
+			i = Tile.all.length;
+		}
+		while(i--){
+			var tile = Tile.all[i];
+			tile.score = 0;
+			var j = CapDisk.all_disks.length;
+			while(j--){
+				var disk = CapDisk.all_disks[j];
+				if(intersect(disk,tile)) {
+					tile.score++;
+				}
+			}
 
-		tile.score = tile.score / ((CapDisk.all_disks.length/2)|0);
+			tile.score = tile.score / ((CapDisk.all_disks.length/2)|0);
 
-
-
-		Tile.all[i].color = tileFillLuminance ? "hsla(0,100%,"+(tile.score > 0 ?
-					70*tile.score : "0")+"%,1)" :  "hsla(" + Tile.all[i].score*120 +
-			",80%,"+(tile.score > 0 ? "40%" : "0%")+",1)"; }
-
-
-
-	
-
+			Tile.all[i].color = tileFillLuminance ? "hsla(0,100%,"+(tile.score > 0 ?
+						70*tile.score : "0")+"%,1)" :  "hsla(" + Tile.all[i].score*120 +
+				",80%,"+(tile.score > 0 ? "40%" : "0%")+",1)"; 
+		}
+	}
 };
 
 requestAnimationFrame(draw);
@@ -430,8 +506,113 @@ $('#fps').spinner({min: 1, max: 30,
 		console.log(fps);
 	},
 	spin: function(evt,ui){
-		fps = $('#fps').val();
+		fps = ui.value;
 		msToDraw = 1000/fps;
 		console.log(fps);
 	}});
 	
+$("#txCount").spinner({min: 1, max: 50,
+	change: function(evt,ui){
+		var newTxCnt = $('#txCount').val();
+		while(newTxCnt > numTransmitters){
+			new Transmitter(canvas.width*Math.random(),canvas.height*Math.random());
+			++numTransmitters;
+		}
+		while(newTxCnt < numTransmitters){
+			Transmitter.all[Transmitter.all.length-1].remove();
+			--numTransmitters;
+		}
+	},
+	spin: function(evt,ui){
+		var newTxCnt = ui.value;
+		while(newTxCnt > numTransmitters){
+			new Transmitter(canvas.width*Math.random(),canvas.height*Math.random());
+			++numTransmitters;
+		}
+		while(newTxCnt < numTransmitters){
+			Transmitter.all[Transmitter.all.length-1].remove();
+			--numTransmitters;
+		}
+		
+	}
+	});
+$("#showTransmitters").click(function(){
+	showTransmitter = $(this).is(':checked');
+});
+
+$('#numRows').spinner({min:1,max:100,
+	spin: function(evt,ui){
+		if(numRows != ui.value){
+			numRows = ui.value;
+			Tile.all.length = 0; // Empty Tile array
+		}
+
+	},
+	change: function(evt,ui){
+		var nv = $('#numRows').val();
+		if(nv != numRows){
+			numRows = nv;
+			Tile.all.length = 0; // Empty tile array
+		}
+	}
+});
+
+$('#numCols').spinner({min:1,max:100,
+	spin: function(evt,ui){
+		if(numCols != ui.value){
+			numCols = ui.value;
+			Tile.all.length = 0; // Empty Tile array
+		}
+
+	},
+	change: function(evt,ui){
+		var nv = $('#numCols').val();
+		if(nv != numCols){
+			numCols = nv;
+			Tile.all.length = 0; // Empty tile array
+		}
+	}
+});
+
+
+$('#transparencySlide').slider({min: 0, max: 1.0, step: 0.01, value: 1.0,
+	slide: function(evt,ui){
+		clearAlpha = ui.value;
+		$('#transSlideLabel').text("Transparency: " + ((clearAlpha*100)|0) + "%");
+	}
+});
+
+function autoCanvasSize(){
+	var $c = $('#canvas');
+	var $p = $($c.parent());
+	$c.attr('width',$p.width());
+	var h = $p.height();
+	var vp2 = $.viewportH()/2;
+	console.log(h + " / " + vp2);
+	if(h > vp2){
+		h = vp2;
+	}
+	$c.attr('height',h);
+}
+
+$('#resolutionSlide').slider({min:0,max:resolutions.length-1,step:1,value:0,
+	slide: function(evt,ui){
+		if(ui.value == 0){
+			autoCanvasSize();
+			isMaxCanvas = true;
+		}else {
+			canvas.width = resolutions[ui.value].w;
+			canvas.height = resolutions[ui.value].h;
+			isMaxCanvas = false;
+		}
+		$('#resSlideLabel').html("Resolution: " + resolutions[ui.value].w + "&times;"+resolutions[ui.value].h);
+		resize();
+	}
+});
+
+$('#showWinnerLines').click(function(){
+	showWinnerLines = $(this).is(':checked');
+});
+$('#showLoserLines').click(function(){
+	showLoserLines = $(this).is(':checked');
+});
