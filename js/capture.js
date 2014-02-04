@@ -86,7 +86,7 @@ function Transmitter(x, y){
 
 Transmitter.all = [];
 
-function winLoseLine(tx,line){
+function winLoseLine(tx,line,color){
 	ctx.save();
 		ctx.beginPath();
 		ctx.moveTo(0,0);
@@ -95,7 +95,7 @@ function winLoseLine(tx,line){
 		ctx.strokeStyle = "#000";
 		ctx.lineWidth = 2;
 		ctx.stroke();
-		ctx.strokeStyle = "#55f";
+		ctx.strokeStyle = color;
 		ctx.lineWidth = 1;
 		ctx.stroke();
 	ctx.restore();
@@ -142,13 +142,13 @@ Transmitter.prototype = {
 				if(showLoserLines){
 					var i = this.diskLosers.length;
 					while(i--){
-						winLoseLine(this,this.diskLosers[i]);
+						winLoseLine(this,this.diskLosers[i],"#f44");
 					}
 				}
 				if(showWinnerLines){
 					var i = this.diskWinners.length;
 					while(i--){
-						winLoseLine(this,this.diskWinners[i]);
+						winLoseLine(this,this.diskWinners[i],"#00f");
 					}
 				}
 
@@ -333,10 +333,6 @@ function animate(dT){
 	while(i--){
 		Tile.all[i].draw(ctx);
 	}
-	i = Transmitter.all.length;
-	while(i--){
-		Transmitter.all[i].draw(ctx);
-	}
 
 	if(showDiskBorder || showDiskFill || showDiskCenter ){
 		i = CapDisk.all_disks.length;
@@ -345,6 +341,10 @@ function animate(dT){
 		}
 	}
 
+	i = Transmitter.all.length;
+	while(i--){
+		Transmitter.all[i].draw(ctx);
+	}
 
 }
 
