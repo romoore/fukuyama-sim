@@ -170,6 +170,8 @@ function mouseDownHandler(ev){
 		}
 		if(nearTx !== null){
 			selectedTransmitter = nearTx;
+			selectedTransmitter.x = pos.x;
+			selectedTransmitter.y = pos.y;
 		}
 	}
 };
@@ -178,7 +180,7 @@ function mouseUpHandler(ev){
 	// If animating, check to see if a "click" occurred to pause
 	if(!paused){
 		paused = true;
-		$('#status').html('Paused&nbsp;-&nbsp;Use&nbsp;mouse&nbsp;to&nbsp;move&nbsp;transmitters');
+		$('#status').html('Paused&nbsp;-&nbsp;Drag&nbsp;transmitters');
 	}else {
 		if(selectedTransmitter == null && mDownTime > 0 && (Date.now() - mDownTime)<1000){
 			paused = false;
