@@ -86,6 +86,95 @@ function Transmitter(x, y){
 	this.colorA = "hsla("+h+",100%,60%,.2)";
 }
 
+var selectedTransmitter = null;
+var paused = false;
+
+function mouseMoveHandler(ev){
+	if(!paused){
+		return;
+	}
+	var x, y;
+
+	/*
+	 * Author: Mihai Sucan
+	 * URL: http://dev.opera.com/articles/view/html5-canvas-painting/
+	 * Date: Feb 4, 2014
+	 */
+	if(ev.layerX || ev.layerX == 0){ // Firefox
+		x = ev.layerX;
+		y = ev.layerY;
+	} else if(ev.offsetX || ev.offsetX == 0){ // Opera
+		x = ev.offsetX;
+		y = ev.offsetY;
+	}
+
+	if(selectedTransmitter != null){
+		selectedTransmitter.x = x;
+		selectedTransmitter.y = y;
+	}
+
+};
+
+function getXY(ev){
+	var x, y;
+
+	/*
+	 * Author: Mihai Sucan
+	 * URL: http://dev.opera.com/articles/view/html5-canvas-painting/
+	 * Date: Feb 4, 2014
+	 */
+	if(ev.layerX || ev.layerX == 0){ // Firefox
+		x = ev.layerX;
+		y = ev.layerY;
+	} else if(ev.offsetX || ev.offsetX == 0){ // Opera
+		x = ev.offsetX;
+		y = ev.offsetY;
+	}
+	return {x: x, y: y};
+}
+
+var mDownTime = 0;
+
+/*
+ * Currently paused: select a transmitter
+ * Currently animating: time click for pausing
+ */
+function mouseDownHandler(ev){
+	mDownTime = Date.now();
+	if(paused){
+		var pos = getXY(ev);
+		var nearTx = null;
+		var dist = 10;
+		var i = Transmitter.all.length;
+		while(i--){
+			var t = Transmitter.all[i];
+			var d = Math.abs(pos.x-t.x + pos.y-t.y);
+			if(d<dist){
+				nearTx = t;
+				dist = d;
+			}
+		}
+		if(nearTx !== null){
+			selectedTransmitter = nearTx;
+		}
+	}
+};
+
+function mouseUpHandler(ev){
+	// If animating, check to see if a "click" occurred to pause
+	if(!paused){
+		paused = true;
+		$('#status').html('Paused&nbsp;-&nbsp;Use&nbsp;mouse&nbsp;to&nbsp;move&nbsp;transmitters');
+	}else {
+		if(selectedTransmitter == null && mDownTime > 0 && (Date.now() - mDownTime)<1000){
+			paused = false;
+			$('#status').html('Animating:&nbsp;Click&nbsp;to&nbsp;pause');
+		}else {
+			selectedTransmitter = null;
+		}	
+	}
+}
+
 Transmitter.all = [];
 
 function winLoseLine(tx,line,color){
@@ -241,6 +330,10 @@ CapDisk.prototype = {
 
 var canvas = document.getElementById("canvas");
 var ctx = canvas.getContext("2d");
+
+canvas.addEventListener('mousemove', mouseMoveHandler, false);
+canvas.addEventListener('mousedown',mouseDownHandler,false);
+canvas.addEventListener('mouseup',mouseUpHandler,false);
 
 
 var numRows = 5;
@@ -442,11 +535,13 @@ function intersect(c,r){
 }
 
 var updateSim = function(dT){
+	if(!paused){
 	var i;
 		i = Transmitter.all.length;
 		while(i--){
 			Transmitter.all[i].update(dT);
 		}
+	}
 	if(showTileFill || showDiskBorder || showDiskFill || showDiskCenter || showWinnerLines || showLoserLines){
 		i = CapDisk.all_disks.length;
 		while(i--){
@@ -607,8 +702,8 @@ $('#resolutionSlide').slider({min:0,max:resolutions.length-1,step:1,value:0,
 			canvas.height = resolutions[ui.value].h;
 			isMaxCanvas = false;
 		}
-		$('#resSlideLabel').html("Resolution: " + resolutions[ui.value].w + "&times;"+resolutions[ui.value].h);
 		resize();
+		$('#resSlideLabel').html("Resolution: " + resolutions[ui.value].w + "&times;"+resolutions[ui.value].h);
 	}
 });
 

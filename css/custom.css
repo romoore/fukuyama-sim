@@ -91,3 +91,7 @@
 	font-weight: normal;
 	font-style: italic;
 }
+
+#canvas:active {
+	cursor: default;
+}
