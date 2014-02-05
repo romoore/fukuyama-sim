@@ -133,12 +133,12 @@ function getXY(ev){
 	if(ev._layerX || ev._layerX == 0){ // touch events
 		x = ev._layerX;
 		y = ev._layerY;
-	}else if(ev.layerX || ev.layerX == 0){ // Firefox
-		x = ev.layerX;
-		y = ev.layerY;
 	} else if(ev.offsetX || ev.offsetX == 0){ // Opera
 		x = ev.offsetX;
 		y = ev.offsetY;
+	}else if(ev.layerX || ev.layerX == 0){ // Firefox
+		x = ev.layerX;
+		y = ev.layerY;
 	} 
 	return {x: x, y: y};
 }
