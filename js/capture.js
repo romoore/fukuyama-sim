@@ -89,28 +89,35 @@ function Transmitter(x, y){
 var selectedTransmitter = null;
 var paused = false;
 
+function touchStartHandler(ev){
+//	ev.preventDefault();
+	ev._layerX = (ev.targetTouches[0].pageX - $('#canvas').offset().left);
+	ev._layerY = (ev.targetTouches[0].pageY - $('#canvas').offset().top);
+	mouseDownHandler(ev);
+}
+
+function touchEndHandler(ev){
+	ev.preventDefault();
+	mouseUpHandler(ev);
+}
+
+function touchMoveHandler(ev){
+	if(ev.touches.length == 1){
+		ev.preventDefault();
+		ev._layerX = (ev.targetTouches[0].pageX - $('#canvas').offset().left);
+		ev._layerY = (ev.targetTouches[0].pageY - $('#canvas').offset().top);
+		mouseMoveHandler(ev);
+	}
+}
+
 function mouseMoveHandler(ev){
 	if(!paused){
 		return;
 	}
-	var x, y;
-
-	/*
-	 * Author: Mihai Sucan
-	 * URL: http://dev.opera.com/articles/view/html5-canvas-painting/
-	 * Date: Feb 4, 2014
-	 */
-	if(ev.layerX || ev.layerX == 0){ // Firefox
-		x = ev.layerX;
-		y = ev.layerY;
-	} else if(ev.offsetX || ev.offsetX == 0){ // Opera
-		x = ev.offsetX;
-		y = ev.offsetY;
-	}
-
-	if(selectedTransmitter != null){
-		selectedTransmitter.x = x;
-		selectedTransmitter.y = y;
+	var pos = getXY(ev);
+	if(selectedTransmitter !== null){
+		selectedTransmitter.x = pos.x;
+		selectedTransmitter.y = pos.y;
 	}
 
 };
@@ -123,13 +130,16 @@ function getXY(ev){
 	 * URL: http://dev.opera.com/articles/view/html5-canvas-painting/
 	 * Date: Feb 4, 2014
 	 */
-	if(ev.layerX || ev.layerX == 0){ // Firefox
+	if(ev._layerX || ev._layerX == 0){ // touch events
+		x = ev._layerX;
+		y = ev._layerY;
+	}else if(ev.layerX || ev.layerX == 0){ // Firefox
 		x = ev.layerX;
 		y = ev.layerY;
 	} else if(ev.offsetX || ev.offsetX == 0){ // Opera
 		x = ev.offsetX;
 		y = ev.offsetY;
-	}
+	} 
 	return {x: x, y: y};
 }
 
@@ -140,11 +150,15 @@ var mDownTime = 0;
  * Currently animating: time click for pausing
  */
 function mouseDownHandler(ev){
+	// Double event - touch?
+	if(mDownTime > 0 && (Date.now()-mDownTime < 200)){
+		return;
+	}
 	mDownTime = Date.now();
 	if(paused){
 		var pos = getXY(ev);
 		var nearTx = null;
-		var dist = 10;
+		var dist = 20;
 		var i = Transmitter.all.length;
 		while(i--){
 			var t = Transmitter.all[i];
@@ -173,6 +187,7 @@ function mouseUpHandler(ev){
 			selectedTransmitter = null;
 		}	
 	}
+	mDownTime = 0;
 }
 
 Transmitter.all = [];
@@ -334,6 +349,9 @@ var ctx = canvas.getContext("2d");
 canvas.addEventListener('mousemove', mouseMoveHandler, false);
 canvas.addEventListener('mousedown',mouseDownHandler,false);
 canvas.addEventListener('mouseup',mouseUpHandler,false);
+canvas.addEventListener('touchmove', touchMoveHandler, false);
+canvas.addEventListener('touchstart',touchStartHandler,false);
+canvas.addEventListener('touchend',touchEndHandler,false);
 
 
 var numRows = 5;
