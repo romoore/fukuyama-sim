@@ -134,7 +134,8 @@ function mouseMoveHandler(ev){
 
 };
 
-function getXY(ev){
+function getXY(e){
+	var ev = e || window.event;
 	var x, y;
 
 	/*
@@ -149,8 +150,10 @@ function getXY(ev){
 		x = ev.offsetX;
 		y = ev.offsetY;
 	}else if(ev.layerX || ev.layerX == 0){ // Firefox
-		x = ev.layerX;
-		y = ev.layerY;
+		x = (ev.pageX - $('#canvas').offset().left);
+		y = (ev.pageY - $('#canvas').offset().top);
+		//x = ev.layerX;
+		//y = ev.layerY;
 	} 
 	return {x: x, y: y};
 }
