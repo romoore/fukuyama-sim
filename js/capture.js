@@ -19,7 +19,7 @@ var showMaxTile = false;
 var clearAlpha = 1.0;
 
 // Canvas resolutions WxH
-var resolutions = [{w:"100%",h:"100%"},{w:540,h:360},{w:720,h:480},{w:1080,h:720},{w:1440,h:960},{w:1920,h:1080}];
+var resolutions = [{w:"100%",h:"50%"},{w:540,h:360},{w:720,h:480},{w:1080,h:720},{w:1440,h:960},{w:1920,h:1080}];
 var isMaxCanvas = true;
 var fullScreen = false;
 
