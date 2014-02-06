@@ -14,12 +14,14 @@ var showDiskCenter = false;
 var showTransmitter = true;
 var showWinnerLines = false;
 var showLoserLines = false;
+var showMaxTile = false;
 
 var clearAlpha = 1.0;
 
 // Canvas resolutions WxH
 var resolutions = [{w:"100%",h:"100%"},{w:540,h:360},{w:720,h:480},{w:1080,h:720},{w:1440,h:960},{w:1920,h:1080}];
 var isMaxCanvas = true;
+var fullScreen = false;
 
 
 
@@ -36,6 +38,7 @@ function Tile(x, y, w, h, score, color){
 
 
 Tile.all = [];
+Tile.max = 0;
 
 Tile.prototype = {
 	draw: function(ctx){
@@ -49,6 +52,15 @@ Tile.prototype = {
 				ctx.strokeStyle = "#fff";
 				ctx.lineWidth = 1;
 				ctx.strokeRect(0,0,this.w,this.h);
+			}
+			if(showMaxTile && this.score == Tile.max){
+				ctx.strokeStyle = showTileFill ? "#000" : "#fff";
+				ctx.lineWidth = 1;
+				ctx.strokeRect(0,0,this.w-1,this.h-1);
+				if(!showTileFill && showTileBorder){
+					ctx.fillStyle = this.color;
+					ctx.fillRect(0,0,this.w,this.h);
+				}
 			}
 		ctx.restore();
 	}
@@ -368,6 +380,7 @@ var tileHeight = (canvas.height / numRows)|0;
 
 var hex = ['a','b','c','d','e','f'];
 
+
 function genTiles(){
 	tileWidth = (canvas.width / numCols)|0;
 	tileHeight = (canvas.height / numRows)|0;
@@ -380,9 +393,38 @@ function genTiles(){
 var cH = canvas.height;
 var cW = canvas.width;
 
-var resize = function(){
-	console.log("resizing");
-	if(isMaxCanvas){
+var originalCanvasStyle = null;
+var originalIconStyle = null;
+
+function toggleFullScreen(){
+	
+	fullScreen = !fullScreen;
+	if(fullScreen){
+		var $canvas = $('#canvas');
+		originalCanvasStyle = $canvas.css(['position','right','bottom']);
+		$canvas.css('position','fixed');
+		$canvas.css('left','0');
+		$canvas.css('top','0');
+		$('.settings-row').hide();
+		var $icon = $('#resize');
+		originalIconStyle = $icon.css(['position','bottom','right']);
+		$('#resize').css('position','fixed').css('bottom','5px').css('right','5px');
+	}else {
+		var $canvas = $('#canvas');
+		$canvas.css(originalCanvasStyle);
+		$('.settings-row').show();
+		var $icon = $('#resize');
+		$icon.css(originalIconStyle);
+	}
+	resize();
+}
+
+
+function resize(){
+	if(fullScreen){
+		canvas.width = window.innerWidth;
+		canvas.height = window.innerHeight;
+	}else if(isMaxCanvas){
 		autoCanvasSize();
 	}	
 	if((tileWidth != (canvas.width/numCols)|0) || (tileHeight != (canvas.height/numRows)|0)){
@@ -413,7 +455,8 @@ var resize = function(){
 	cH = canvas.height;
 	cW = canvas.width;
 };
-$(window).resize(resize);
+window.addEventListener('resize',resize,false);
+window.addEventListener('orientationchange',resize,false);
 resize();
 
 var lastDraw = 0;
@@ -445,10 +488,8 @@ function animate(dT){
 		genTiles();
 		i = Tile.all.length;
 	}
-	while(i--){
-		Tile.all[i].draw(ctx);
-	}
 
+	Tile.draw_all(ctx);
 	if(showDiskBorder || showDiskFill || showDiskCenter ){
 		i = CapDisk.all_disks.length;
 		while(i--){
@@ -555,6 +596,7 @@ function intersect(c,r){
 }
 
 var updateSim = function(dT){
+	Tile.max = 0;
 	if(!paused){
 	var i;
 		i = Transmitter.all.length;
@@ -568,7 +610,7 @@ var updateSim = function(dT){
 			CapDisk.all_disks[i].update(dT);
 		}
 	}
-	if(showTileFill){
+	if(showTileFill || showMaxTile){
 		// Update tiles
 		i = Tile.all.length;
 		if(i == 0){
@@ -587,6 +629,9 @@ var updateSim = function(dT){
 			}
 
 			tile.score = tile.score / ((CapDisk.all_disks.length/2)|0);
+			if(tile.score > Tile.max){
+				Tile.max = tile.score;
+			}
 
 			Tile.all[i].color = tileFillLuminance ? "hsla(0,100%,"+(tile.score > 0 ?
 						70*tile.score : "0")+"%,1)" :  "hsla(" + Tile.all[i].score*120 +
@@ -620,12 +665,10 @@ $('#fps').spinner({min: 1, max: 30,
 	change: function(evt,ui){
 		fps = $('#fps').val();
 		msToDraw = 1000/fps;
-		console.log(fps);
 	},
 	spin: function(evt,ui){
 		fps = ui.value;
 		msToDraw = 1000/fps;
-		console.log(fps);
 	}});
 	
 $("#txCount").spinner({min: 1, max: 50,
@@ -705,7 +748,6 @@ function autoCanvasSize(){
 	$c.attr('width',$p.width());
 	var h = $p.height();
 	var vp2 = $.viewportH()/2;
-	console.log(h + " / " + vp2);
 	if(h > vp2){
 		h = vp2;
 	}
@@ -732,4 +774,18 @@ $('#showWinnerLines').click(function(){
 });
 $('#showLoserLines').click(function(){
 	showLoserLines = $(this).is(':checked');
+});
+
+$('#showMaxTile').click(function(){
+	showMaxTile = $(this).is(':checked');
+});
+
+$('#resize').click(function(){
+	toggleFullScreen();
+	var $icon = $('#full-icon');
+	if(fullScreen){
+		$icon.removeClass('glyphicon-fullscreen').addClass('glyphicon-resize-small');
+	}else {
+		$icon.removeClass('glyphicon-resize-small').addClass('glyphicon-fullscreen');
+	}
 });

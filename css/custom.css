@@ -95,3 +95,17 @@
 #canvas:active {
 	cursor: default;
 }
+
+#renderPane {
+	position: relative;
+}
+
+#resize {
+	position: absolute;
+	line-height: 1em;
+	right: 15px;
+	bottom: 5px;
+	border: 1px solid black;
+	margin: 0;
+	padding: 1px;
+}

@@ -14,15 +14,17 @@
 				<h1 style="border-bottom: 1px solid black;">Fukuyama Approximation
 					Simulation <small id="status">Animating:&nbsp;Click&nbsp;to&nbsp;pause</small></h1>
 					<canvas id="canvas" width="720" height="480"></canvas>
+					<div id="resize"><span class="glyphicon glyphicon-fullscreen" id="full-icon"></span></div>
 				</div>
 			</div><!-- row -->
-			<div class="row">
+			<div class="row settings-row">
 				<div class="col-md-6">
 					<h3>Receiver Tiles</h3>
 					<div class="form-group">
 						<label><input type="checkbox" id="showTileFill" checked></input>Show Tiles</label>
 						<label><input type="checkbox" id="showTileBordersCheck" ></input>Show Tile Borders</label>
 						<label><input type="checkbox" id="tileFillLuminance"></input>Use Luminance for Tiles</label>
+						<label><input type="checkbox" id="showMaxTile"></input>Highlight max tile</label>
 					</div>
 					<div class="form-group">
 						<label for="numRows">No. Rows: <input id="numRows" class="light-spinner" value="5"></input></label>
@@ -38,7 +40,7 @@
 					</div>
 				</div>
 			</div><!-- row -->
-			<div class="row">
+			<div class="row settings-row">
 				<div class="col-md-6">
 					<h3>Transmitters</h3>
 					<div class="form-group">
@@ -57,6 +59,9 @@
 						<label for="fps">FPS</label>
 						<input id="fps" class="light-spinner" value="10" >
 					</div>-->
+					<div class="form-group">
+						<label><input type="checkbox" id="useLayers"></input>Use layering</label>
+					</div>
 					<div class="form-group">
 						<label for="transparencySlide" id="transSlideLabel">Transparency: 100%</label>
 						<div id="transparencySlide" style="width: 240px;"></div>
