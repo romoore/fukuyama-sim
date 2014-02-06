@@ -407,8 +407,8 @@ function toggleFullScreen(){
 		$canvas.css('top','0');
 		$('.settings-row').hide();
 		var $icon = $('#resize');
-		originalIconStyle = $icon.css(['position','bottom','right']);
-		$('#resize').css('position','fixed').css('bottom','5px').css('right','5px');
+		originalIconStyle = $icon.css(['position','bottom','right','font-size']);
+		$('#resize').css('position','fixed').css('bottom','5px').css('right','5px').css('font-size','2em');
 	}else {
 		var $canvas = $('#canvas');
 		$canvas.css(originalCanvasStyle);
@@ -789,3 +789,5 @@ $('#resize').click(function(){
 		$icon.removeClass('glyphicon-resize-small').addClass('glyphicon-fullscreen');
 	}
 });
+
+
