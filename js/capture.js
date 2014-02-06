@@ -382,6 +382,7 @@ var hex = ['a','b','c','d','e','f'];
 
 
 function genTiles(){
+	Tile.all = [];
 	tileWidth = (canvas.width / numCols)|0;
 	tileHeight = (canvas.height / numRows)|0;
 	for(var x = 0; x < numCols; ++x){
@@ -408,7 +409,7 @@ function toggleFullScreen(){
 		$('.settings-row').hide();
 		var $icon = $('#resize');
 		originalIconStyle = $icon.css(['position','bottom','right','font-size']);
-		$('#resize').css('position','fixed').css('bottom','5px').css('right','5px').css('font-size','2em');
+		$('#resize').css('position','fixed').css('bottom','5px').css('right','5px').css('font-size',Math.max(window.innerHeight,window.innerWidth)*.05+'px');
 	}else {
 		var $canvas = $('#canvas');
 		$canvas.css(originalCanvasStyle);

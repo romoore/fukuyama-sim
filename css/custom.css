@@ -91,6 +91,9 @@
 	font-weight: normal;
 	font-style: italic;
 }
+#canvas {
+	z-index: 0;
+}
 
 #canvas:active {
 	cursor: default;
@@ -108,4 +111,5 @@
 	border: 1px solid black;
 	margin: 0;
 	padding: 1px;
+	z-index: 50;
 }
