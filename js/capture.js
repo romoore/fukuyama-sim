@@ -396,13 +396,17 @@ var cW = canvas.width;
 
 var originalCanvasStyle = null;
 var originalIconStyle = null;
+var origCanvH = 0;
+var origCanvW = 0;
 
 function toggleFullScreen(){
 	
 	fullScreen = !fullScreen;
 	if(fullScreen){
 		var $canvas = $('#canvas');
-		originalCanvasStyle = $canvas.css(['position','right','bottom']);
+		origCanvH = canvas.height;
+		origCanvW = canvas.width;
+		originalCanvasStyle = $canvas.css(['position','right','bottom','top','right']);
 		$canvas.css('position','fixed');
 		$canvas.css('left','0');
 		$canvas.css('top','0');
@@ -413,6 +417,8 @@ function toggleFullScreen(){
 	}else {
 		var $canvas = $('#canvas');
 		$canvas.css(originalCanvasStyle);
+		canvas.width = origCanvW;
+		canvas.height = origCanvH;
 		$('.settings-row').show();
 		var $icon = $('#resize');
 		$icon.css(originalIconStyle);
@@ -427,13 +433,18 @@ function resize(){
 		canvas.height = window.innerHeight;
 	}else if(isMaxCanvas){
 		autoCanvasSize();
-	}	
+	}
 	if((tileWidth != (canvas.width/numCols)|0) || (tileHeight != (canvas.height/numRows)|0)){
 		Tile.all.length = 0;
 		genTiles();
 	}
 	tileWidth = canvas.width / numCols;
 	tileHeight = canvas.height / numRows;
+
+	if(!fullScreen){
+		var $rs = $('#resize');
+		$rs.css('right',$rs.parent().width()-canvas.width+$rs.width()+2);
+	}
 
 	var i = Tile.all.length;
 	if(i == 0){
@@ -747,11 +758,11 @@ function autoCanvasSize(){
 	var $c = $('#canvas');
 	var $p = $($c.parent());
 	$c.attr('width',$p.width());
-	var h = $p.height();
-	var vp2 = $.viewportH()/2;
-	if(h > vp2){
-		h = vp2;
-	}
+	var h = $.viewportH()/2;//$p.height();
+//	var vp2 = $.viewportH()/2;
+//	if(h > vp2){
+//		h = vp2;
+//	}
 	$c.attr('height',h);
 }
 
