@@ -177,7 +177,7 @@ function mouseDownHandler(ev){
 		var i = Transmitter.all.length;
 		while(i--){
 			var t = Transmitter.all[i];
-			var d = Math.abs(pos.x-t.x + pos.y-t.y);
+			var d = Math.abs(pos.x-t.x) + Math.abs(pos.y-t.y);
 			if(d<dist){
 				nearTx = t;
 				dist = d;
